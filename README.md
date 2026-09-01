@@ -15,6 +15,7 @@ Hlavní část projektu **není** Spring Boot. Hlavní část je vlastní
 |---|---|
 | `build.gradle.kts`, `gradlew`, `application.yaml` | infrastruktura, závislosti a CORS originy |
 | `frontend/index.html` | dodaný frontend, nebudeš ho programovat |
+| `config/WebCorsConfiguration.kt` | CORS, ať se s tím nezdržuješ |
 | `PatrolApplication.kt` | vygeneroval Spring Initializr |
 | `datastructure/CircularList.kt` | **rozhraní = specifikace**, jeho KDoc čti jako první |
 | `model/Checkpoint.kt`, `Priority.kt`, `PatrolState.kt` | doménový model, přesný tvar dat |
@@ -33,33 +34,34 @@ Hlavní část projektu **není** Spring Boot. Hlavní část je vlastní
 | `dto/ApiErrorResponse.kt` | neexistuje — vytvoř |
 | `controller/ApiExceptionHandler.kt` | neexistuje — vytvoř `@RestControllerAdvice` |
 | mapování model → DTO | kdekoli uznáš za vhodné |
-| CORS konfigurace | neexistuje — origin je v `application.yaml` |
 
-Na začátku padá 164 ze 169 testů. To je správný výchozí stav.
+Na začátku padá 162 ze 169 testů. To je správný výchozí stav.
 
 ## Jak to spustit
 
 ```bash
 ./gradlew test        # celá sada testů
-./gradlew bootRun     # server na http://localhost:8080
-./gradlew frontend    # dodaný frontend na http://localhost:5173
+./gradlew bootRun     # server i frontend na http://localhost:8080
 ```
 
 Frontend je jeden statický soubor `frontend/index.html` — žádný npm, žádný build.
-Task `frontend` ho servíruje malým HTTP serverem, který je součástí JDK.
-Potřebuješ **dva terminály**: v jednom `bootRun`, ve druhém `frontend`, pak otevři
-<http://localhost:5173>.
-
-Frontend běží schválně na jiném portu než server, takže je to skutečný cross-origin
-požadavek — dokud nenapíšeš CORS konfiguraci, uvidíš v UI hlášku
-„Server neodpovídá“. To je správné chování, ne chyba frontendu.
+Gradle ho přibalí serveru mezi statické zdroje, takže **`bootRun` spustí obojí naráz**
+a stačí otevřít <http://localhost:8080>. Stránka mluví na stejný origin, takže se
+v tomhle režimu neřeší CORS.
 
 Panel **Komunikace se serverem** ukazuje každý request a odpověď tak, jak jdou po drátě —
 včetně chybových `ApiErrorResponse`. Je to nejrychlejší způsob, jak zjistit, kde se
 tvoje odpověď liší od kontraktu. Šipky <kbd>&larr;</kbd> <kbd>&rarr;</kbd> hýbou robotem.
 
-Jiný port frontendu: `./gradlew frontend -PfrontendPort=3000`
-(pak si ten origin přidej do `application.yaml`).
+Volitelně jde frontend pustit i na vlastním portu:
+
+```bash
+./gradlew frontend    # první volný z 5500, 4200, 8081, 5555
+```
+
+Pak je to skutečný cross-origin požadavek, který funguje díky hotové
+`config/WebCorsConfiguration`. Vlastní port: `./gradlew frontend -PfrontendPort=9999`
+(ten origin si pak přidej do `patrol.cors.allowed-origins` v `application.yaml`).
 
 Doporučené pořadí práce:
 
@@ -151,20 +153,6 @@ Přesné chybové hlášky, které testy očekávají:
 
 ---
 
-## CORS
-
-Frontend běží na jiném portu než server. Povolené originy jsou v `application.yaml`:
-
-```yaml
-patrol:
-  cors:
-    allowed-origins: http://localhost:5173,http://localhost:3000,...
-```
-
-Doplň si tam origin, na kterém ti frontend skutečně běží.
-
----
-
 ## Co dělají jednotlivé testovací třídy
 
 | Třída | Co hlídá |
@@ -191,4 +179,4 @@ Doplň si tam origin, na kterém ti frontend skutečně běží.
 * [ ] iterátor skončí po jednom cyklu
 * [ ] `PatrolService` používá vlastní seznam
 * [ ] REST API odpovídá kontraktu
-* [ ] dodaný frontend se serverem funguje
+* [ ] dodaný frontend na <http://localhost:8080> funguje

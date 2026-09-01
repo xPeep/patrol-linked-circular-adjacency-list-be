@@ -161,7 +161,17 @@
  * způsob, jak zjistit, čím se tvoje odpověď liší od kontraktu.
  */
 
-const DEFAULT_BASE = "http://localhost:8080";
+/*
+ * Kam se posílají requesty.
+ *
+ * `gradlew bootRun` servíruje tuhle stránku přímo ze Spring Boot serveru, takže
+ * stačí mluvit na vlastní origin a žádný CORS se neřeší. Když si stránku pustíš
+ * zvlášť přes `gradlew frontend`, běží na jiném portu a API je pořád na 8080 -
+ * to už je cross origin požadavek a řeší ho WebCorsConfiguration na serveru.
+ *
+ * Adresu jde kdykoli přepsat v poli v hlavičce, uloží se do localStorage.
+ */
+const DEFAULT_BASE = location.port === "8080" ? location.origin : "http://localhost:8080";
 const $ = (id) => document.getElementById(id);
 
 let base = localStorage.getItem("patrol.base") || DEFAULT_BASE;

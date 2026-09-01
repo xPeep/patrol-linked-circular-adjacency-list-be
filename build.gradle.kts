@@ -49,9 +49,17 @@ tasks.withType<Test> {
 	}
 }
 
-// The delivered frontend is a single static file. It is served on a different port
-// than the API on purpose, so the CORS configuration of the server really gets exercised.
-// Every candidate port below is already listed in application.yaml under
+// The delivered frontend is bundled into the server as a static resource, so
+// `gradlew bootRun` alone serves both the API and the UI on http://localhost:8080.
+tasks.named<ProcessResources>("processResources") {
+	from(layout.projectDirectory.dir("frontend")) {
+		into("static")
+	}
+}
+
+// Optional: serve the same frontend on a port of its own. Then the browser really
+// makes a cross origin call and the CORS configuration of the server is what makes
+// it work. Every candidate port below is already listed in application.yaml under
 // patrol.cors.allowed-origins, so whichever one is free will work.
 val frontendDir = layout.projectDirectory.dir("frontend").asFile.toPath()
 val frontendPorts: List<Int> = (findProperty("frontendPort") as String?)

@@ -20,8 +20,9 @@ import org.springframework.web.bind.annotation.RestController
  * You still have to write yourself:
  *  * `dto/CheckpointCreateRequest` including the validation that turns bad input into 400,
  *  * `dto/ApiErrorResponse` and the `@RestControllerAdvice` that produces it,
- *  * the mapping from the domain model to the response DTOs,
- *  * the CORS configuration for the frontend origin from `application.yaml`.
+ *  * the mapping from the domain model to the response DTOs.
+ *
+ * CORS is already configured for you in `config/WebCorsConfiguration`.
  */
 @RestController
 class PatrolController(
