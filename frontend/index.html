@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Patrol Loop UI</title>
+<style>
+  :root{
+    --bg:#09111d;--panel:#111c2c;--panel2:#162438;--text:#f2f7ff;--muted:#9fb0c8;
+    --border:rgba(255,255,255,.09);--accent:#22c55e;--accent2:#38bdf8;--warn:#f59e0b;--danger:#fb7185
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;min-height:100vh;color:var(--text);line-height:1.55;
+    font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+    background:
+      radial-gradient(circle at 12% 0%,rgba(34,197,94,.12),transparent 27%),
+      radial-gradient(circle at 86% 8%,rgba(56,189,248,.10),transparent 25%),
+      linear-gradient(180deg,#09111d,#0b1523 55%,#08101a);
+  }
+  .wrap{width:min(1120px,calc(100% - 32px));margin:0 auto;padding:26px 0 60px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+  .brand{display:flex;align-items:center;gap:11px;font-weight:900;font-size:19px}
+  .logo{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;color:#06110c;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));font-size:19px}
+  .conn{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--muted)}
+  .dot{width:9px;height:9px;border-radius:50%;background:#64748b;flex:none}
+  .dot.ok{background:var(--accent);box-shadow:0 0 10px rgba(34,197,94,.7)}
+  .dot.bad{background:var(--danger);box-shadow:0 0 10px rgba(251,113,133,.7)}
+  input,select,button{font:inherit;color:inherit}
+  .base{padding:7px 10px;border:1px solid var(--border);background:#0d1728;border-radius:9px;
+    color:var(--muted);width:210px;font-size:13px}
+  .grid{display:grid;grid-template-columns:1.15fr .85fr;gap:16px;align-items:start}
+  .card{background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.035));
+    border:1px solid var(--border);border-radius:20px;padding:20px}
+  h2{margin:0 0 4px;font-size:17px;letter-spacing:-.3px}
+  .hint{margin:0 0 16px;color:var(--muted);font-size:13px}
+  ol.route{list-style:none;margin:0 0 16px;padding:0;display:grid;gap:7px}
+  .cp{display:grid;grid-template-columns:auto 1fr auto;gap:11px;align-items:center;
+    padding:11px 13px;border-radius:13px;background:#121e30;border:1px solid var(--border);transition:.12s}
+  .cp.current{background:rgba(34,197,94,.13);border-color:rgba(34,197,94,.45)}
+  .idx{width:24px;height:24px;border-radius:8px;display:grid;place-items:center;flex:none;
+    background:#22334d;color:var(--muted);font-size:12px;font-weight:800}
+  .cp.current .idx{background:var(--accent);color:#07150d}
+  .cp .name{font-weight:750}
+  .cp .desc{color:var(--muted);font-size:12.5px}
+  .cp .id{color:#5c6f8c;font-size:10.5px;font-family:Consolas,monospace;margin-top:2px}
+  .pri{padding:3px 9px;border-radius:999px;font-size:11px;font-weight:850;letter-spacing:.4px}
+  .pri.LOW{background:rgba(148,163,184,.16);color:#cbd5e1}
+  .pri.NORMAL{background:rgba(56,189,248,.15);color:#a5e4ff}
+  .pri.HIGH{background:rgba(245,158,11,.16);color:#ffd88a}
+  .empty{padding:26px;text-align:center;color:var(--muted);border:1px dashed var(--border);border-radius:14px;font-size:14px}
+  .btns{display:flex;gap:8px;flex-wrap:wrap}
+  button{padding:9px 14px;border-radius:10px;border:1px solid var(--border);background:#22324b;
+    font-weight:800;font-size:13px;cursor:pointer;transition:.12s}
+  button:hover:not(:disabled){filter:brightness(1.2)}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  button.primary{background:var(--accent);color:#07150d;border-color:transparent}
+  button.danger{background:rgba(251,113,133,.16);color:#ffc2cb;border-color:rgba(251,113,133,.3)}
+  form{display:grid;gap:9px;margin-top:6px}
+  form input,form select{padding:10px 11px;border:1px solid var(--border);background:#0d1728;border-radius:10px;width:100%}
+  form input::placeholder{color:#5c6f8c}
+  label{font-size:11.5px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:#7f95b5}
+  .log{display:grid;gap:7px;max-height:430px;overflow:auto;margin-top:6px}
+  .entry{border:1px solid var(--border);border-radius:11px;background:#0d1728;overflow:hidden}
+  .entry summary{padding:9px 11px;cursor:pointer;display:flex;align-items:center;gap:9px;font-size:12.5px;list-style:none}
+  .entry summary::-webkit-details-marker{display:none}
+  .verb{font-family:Consolas,monospace;font-weight:900;font-size:11px;padding:2px 6px;border-radius:6px;background:#22334d}
+  .path{font-family:Consolas,monospace;color:var(--muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .code{font-weight:900;font-size:11.5px;padding:2px 7px;border-radius:999px}
+  .code.s2{background:rgba(34,197,94,.18);color:#a7f3c4}
+  .code.s4{background:rgba(245,158,11,.18);color:#ffd88a}
+  .code.s5,.code.err{background:rgba(251,113,133,.18);color:#ffc2cb}
+  .entry pre{margin:0;padding:11px 12px;border-top:1px solid var(--border);background:rgba(4,10,19,.55);
+    font-family:Consolas,monospace;font-size:11.5px;color:#cddcf0;overflow:auto;max-height:230px}
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);max-width:min(680px,92vw);
+    padding:13px 17px;border-radius:13px;font-size:13.5px;font-weight:650;z-index:50;
+    background:#1b2b41;border:1px solid var(--border);box-shadow:0 14px 40px rgba(0,0,0,.45)}
+  .toast.bad{background:rgba(80,20,35,.96);border-color:rgba(251,113,133,.4);color:#ffd7dd}
+  .toast.warn{background:rgba(74,52,10,.96);border-color:rgba(245,158,11,.4);color:#ffe6b8}
+  .toast.ok{background:rgba(11,58,32,.96);border-color:rgba(34,197,94,.4);color:#c6f7d8}
+  .toast code{font-family:Consolas,monospace;font-size:12px}
+  kbd{font-family:Consolas,monospace;font-size:11px;padding:1px 5px;border-radius:5px;
+    background:#22334d;border:1px solid var(--border);color:#b7c7dd}
+  @media(max-width:860px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand"><span class="logo">&#8635;</span> Patrol Loop UI</div>
+    <div class="conn">
+      <span class="dot" id="dot"></span>
+      <span id="connText">nepřipojeno</span>
+      <input class="base" id="baseUrl" spellcheck="false" title="Adresa serveru">
+      <button id="reload">Načíst</button>
+    </div>
+  </header>
+
+  <div class="grid">
+
+    <section class="card">
+      <h2>Patrol route</h2>
+      <p class="hint">
+        Zvýrazněný checkpoint je <code>current</code> ze serveru. Pořadí je vždy od
+        <code>first</code> po <code>last</code>. Šipky <kbd>&larr;</kbd> <kbd>&rarr;</kbd> hýbou robotem.
+      </p>
+      <ol class="route" id="route"></ol>
+      <div class="btns">
+        <button id="prev">&larr; Previous</button>
+        <button id="next">Next &rarr;</button>
+        <button id="remove" class="danger">Remove current</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Add checkpoint</h2>
+      <p class="hint">Nový checkpoint se vloží <b>za</b> current.</p>
+      <form id="addForm">
+        <div><label for="name">Name</label>
+          <input id="name" placeholder="Charging Station" autocomplete="off"></div>
+        <div><label for="description">Description</label>
+          <input id="description" placeholder="Check battery level" autocomplete="off"></div>
+        <div><label for="priority">Priority</label>
+          <select id="priority">
+            <option>LOW</option><option selected>NORMAL</option><option>HIGH</option>
+          </select></div>
+        <button class="primary" type="submit">Add after current</button>
+      </form>
+    </section>
+
+    <section class="card" style="grid-column:1/-1">
+      <h2>Komunikace se serverem</h2>
+      <p class="hint">Každý request a odpověď tak, jak jdou po drátě. Klikni na řádek pro tělo odpovědi.</p>
+      <div class="log" id="log"></div>
+    </section>
+
+  </div>
+</div>
+
+<script>
+"use strict";
+
+const DEFAULT_BASE = "http://localhost:8080";
+const $ = (id) => document.getElementById(id);
+
+let base = localStorage.getItem("patrol.base") || DEFAULT_BASE;
+$("baseUrl").value = base;
+$("baseUrl").addEventListener("change", () => {
+  base = $("baseUrl").value.trim().replace(/\/+$/, "") || DEFAULT_BASE;
+  $("baseUrl").value = base;
+  localStorage.setItem("patrol.base", base);
+  load();
+});
+
+/* ---------- HTTP ---------- */
+
+async function call(method, path, body) {
+  const url = base + path;
+  let response, text;
+  try {
+    response = await fetch(url, {
+      method,
+      headers: body === undefined ? {} : { "Content-Type": "application/json" },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+    text = await response.text();
+  } catch (networkError) {
+    log(method, path, null, String(networkError));
+    setConnected(false);
+    toast(
+      "bad",
+      "Server neodpovídá na <code>" + url + "</code>. Buď neběží, " +
+      "nebo nemá povolený CORS pro origin <code>" + location.origin + "</code>."
+    );
+    return null;
+  }
+
+  let payload = null;
+  if (text) { try { payload = JSON.parse(text); } catch (_) { payload = text; } }
+  log(method, path, response.status, payload);
+  setConnected(true);
+
+  if (!response.ok) {
+    const message = payload && payload.message ? payload.message : "HTTP " + response.status;
+    toast(response.status >= 500 ? "bad" : "warn", response.status + " &middot; " + escapeHtml(message));
+    return null;
+  }
+  return payload;
+}
+
+/* ---------- akce ---------- */
+
+async function load() {
+  const state = await call("GET", "/api/patrol");
+  if (state) render(state);
+}
+
+async function mutate(method, path, body) {
+  const state = await call(method, path, body);
+  if (state) render(state);
+}
+
+$("reload").onclick = load;
+$("next").onclick = () => mutate("POST", "/api/patrol/next");
+$("prev").onclick = () => mutate("POST", "/api/patrol/previous");
+$("remove").onclick = () => mutate("DELETE", "/api/checkpoints/current");
+
+$("addForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const payload = {
+    name: $("name").value,
+    description: $("description").value,
+    priority: $("priority").value,
+  };
+  const state = await call("POST", "/api/checkpoints", payload);
+  if (state) {
+    render(state);
+    $("name").value = "";
+    $("description").value = "";
+    $("name").focus();
+    toast("ok", "Checkpoint přidán za current.");
+  }
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.target.matches("input,select,textarea")) return;
+  if (event.key === "ArrowRight") { event.preventDefault(); $("next").click(); }
+  if (event.key === "ArrowLeft") { event.preventDefault(); $("prev").click(); }
+});
+
+/* ---------- vykreslení ---------- */
+
+function render(state) {
+  const list = Array.isArray(state.checkpoints) ? state.checkpoints : [];
+  const currentId = state.current ? state.current.id : null;
+  const route = $("route");
+  route.innerHTML = "";
+
+  if (list.length === 0) {
+    const li = document.createElement("li");
+    li.className = "empty";
+    li.textContent = "Trasa je prázdná. Přidej první checkpoint.";
+    route.appendChild(li);
+  } else {
+    list.forEach((checkpoint, index) => {
+      const li = document.createElement("li");
+      li.className = "cp" + (checkpoint.id === currentId ? " current" : "");
+      li.innerHTML =
+        '<span class="idx">' + (index + 1) + "</span>" +
+        "<span><span class=\"name\">" + escapeHtml(checkpoint.name) + "</span>" +
+        '<div class="desc">' + escapeHtml(checkpoint.description) + "</div>" +
+        '<div class="id">' + escapeHtml(checkpoint.id) + "</div></span>" +
+        '<span class="pri ' + escapeHtml(checkpoint.priority) + '">' + escapeHtml(checkpoint.priority) + "</span>";
+      route.appendChild(li);
+    });
+  }
+
+  const empty = list.length === 0;
+  $("next").disabled = empty;
+  $("prev").disabled = empty;
+  $("remove").disabled = empty;
+}
+
+function setConnected(ok) {
+  $("dot").className = "dot " + (ok ? "ok" : "bad");
+  $("connText").textContent = ok ? "připojeno" : "nedostupný";
+}
+
+function log(method, path, status, payload) {
+  const entry = document.createElement("details");
+  entry.className = "entry";
+  const cls = status === null ? "err" : "s" + String(status)[0];
+  const body = typeof payload === "string" ? payload : JSON.stringify(payload, null, 2);
+  entry.innerHTML =
+    "<summary><span class=\"verb\">" + method + '</span><span class="path">' + escapeHtml(path) + "</span>" +
+    '<span class="code ' + cls + '">' + (status === null ? "FAILED" : status) + "</span></summary>" +
+    "<pre>" + escapeHtml(body || "(bez těla)") + "</pre>";
+  const container = $("log");
+  container.prepend(entry);
+  while (container.children.length > 25) container.lastElementChild.remove();
+}
+
+let toastTimer = null;
+function toast(kind, html) {
+  const existing = document.querySelector(".toast");
+  if (existing) existing.remove();
+  const element = document.createElement("div");
+  element.className = "toast " + kind;
+  element.innerHTML = html;
+  document.body.appendChild(element);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => element.remove(), 6000);
+}
+
+function escapeHtml(value) {
+  return String(value == null ? "" : value)
+    .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
+}
+
+load();
+</script>
+</body>
+</html>

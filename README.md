@@ -14,6 +14,7 @@ Hlavní část projektu **není** Spring Boot. Hlavní část je vlastní
 | Soubor | Proč je hotový |
 |---|---|
 | `build.gradle.kts`, `gradlew`, `application.yaml` | infrastruktura, závislosti a CORS originy |
+| `frontend/index.html` | dodaný frontend, nebudeš ho programovat |
 | `PatrolApplication.kt` | vygeneroval Spring Initializr |
 | `datastructure/CircularList.kt` | **rozhraní = specifikace**, jeho KDoc čti jako první |
 | `model/Checkpoint.kt`, `Priority.kt`, `PatrolState.kt` | doménový model, přesný tvar dat |
@@ -41,7 +42,24 @@ Na začátku padá 164 ze 169 testů. To je správný výchozí stav.
 ```bash
 ./gradlew test        # celá sada testů
 ./gradlew bootRun     # server na http://localhost:8080
+./gradlew frontend    # dodaný frontend na http://localhost:5173
 ```
+
+Frontend je jeden statický soubor `frontend/index.html` — žádný npm, žádný build.
+Task `frontend` ho servíruje malým HTTP serverem, který je součástí JDK.
+Potřebuješ **dva terminály**: v jednom `bootRun`, ve druhém `frontend`, pak otevři
+<http://localhost:5173>.
+
+Frontend běží schválně na jiném portu než server, takže je to skutečný cross-origin
+požadavek — dokud nenapíšeš CORS konfiguraci, uvidíš v UI hlášku
+„Server neodpovídá“. To je správné chování, ne chyba frontendu.
+
+Panel **Komunikace se serverem** ukazuje každý request a odpověď tak, jak jdou po drátě —
+včetně chybových `ApiErrorResponse`. Je to nejrychlejší způsob, jak zjistit, kde se
+tvoje odpověď liší od kontraktu. Šipky <kbd>&larr;</kbd> <kbd>&rarr;</kbd> hýbou robotem.
+
+Jiný port frontendu: `./gradlew frontend -PfrontendPort=3000`
+(pak si ten origin přidej do `application.yaml`).
 
 Doporučené pořadí práce:
 
