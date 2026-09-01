@@ -142,6 +142,25 @@
 <script>
 "use strict";
 
+/*
+ * Dodaný frontend k zadání Patrol Loop API. Nebudeš ho programovat ani upravovat,
+ * slouží jen jako vizuální klient tvého REST API.
+ *
+ * Co dělá:
+ *   GET    /api/patrol              po načtení stránky a po tlačítku Načíst
+ *   POST   /api/checkpoints         po odeslání formuláře
+ *   POST   /api/patrol/next         tlačítko Next  / šipka vpravo
+ *   POST   /api/patrol/previous     tlačítko Previous / šipka vlevo
+ *   DELETE /api/checkpoints/current tlačítko Remove current
+ *
+ * Po každé úspěšné odpovědi překreslí celé UI z přijatého PatrolStateResponse -
+ * nikdy si nedrží vlastní představu o stavu trasy. Pole current ze serveru je
+ * jediný zdroj pravdy o tom, kde robot stojí.
+ *
+ * Panel dole loguje každý požadavek i odpověď včetně těla, což je nejrychlejší
+ * způsob, jak zjistit, čím se tvoje odpověď liší od kontraktu.
+ */
+
 const DEFAULT_BASE = "http://localhost:8080";
 const $ = (id) => document.getElementById(id);
 
@@ -167,20 +186,17 @@ async function call(method, path, body) {
     });
     text = await response.text();
   } catch (networkError) {
-    log(method, path, null, String(networkError));
-    setConnected(false);
-    toast(
-      "bad",
-      "Server neodpovídá na <code>" + url + "</code>. Buď neběží, " +
-      "nebo nemá povolený CORS pro origin <code>" + location.origin + "</code>."
-    );
+    const diagnosis = await diagnose();
+    log(method, path, null, diagnosis.detail + "\n\n" + String(networkError));
+    setConnected(diagnosis.kind);
+    toast("bad", diagnosis.message);
     return null;
   }
 
   let payload = null;
   if (text) { try { payload = JSON.parse(text); } catch (_) { payload = text; } }
   log(method, path, response.status, payload);
-  setConnected(true);
+  setConnected("online");
 
   if (!response.ok) {
     const message = payload && payload.message ? payload.message : "HTTP " + response.status;
@@ -263,9 +279,48 @@ function render(state) {
   $("remove").disabled = empty;
 }
 
-function setConnected(ok) {
-  $("dot").className = "dot " + (ok ? "ok" : "bad");
-  $("connText").textContent = ok ? "připojeno" : "nedostupný";
+/* Stav spojení v hlavičce. "online" | "cors" | "offline". */
+function setConnected(kind) {
+  const label = { online: "připojeno", cors: "běží, blokuje CORS", offline: "server neběží" };
+  $("dot").className = "dot " + (kind === "online" ? "ok" : "bad");
+  $("connText").textContent = label[kind] || "nepřipojeno";
+}
+
+/*
+ * Rozliší dvě úplně různé příčiny, které se v prohlížeči tváří stejně.
+ *
+ * fetch() zahlásí obyčejnou síťovou chybu jak v případě, že na adrese nikdo
+ * neposlouchá, tak v případě, že server odpověděl, ale prohlížeč jeho odpověď
+ * zahodil, protože v ní chyběla hlavička Access-Control-Allow-Origin. Každá
+ * z těch situací se ale opravuje jinde, takže je potřeba je od sebe odlišit.
+ *
+ * Trik: požadavek s mode "no-cors" prohlížeč nikdy neblokuje kvůli CORS.
+ * Vrátí tzv. opaque response, ze které stránka nic nepřečte, ale vrátí ji
+ * pouze tehdy, když server skutečně odpověděl.
+ *
+ *   probe projde  -> server běží, chybí mu CORS konfigurace
+ *   probe spadne  -> na té adrese nic neběží (nebo je špatná adresa)
+ */
+async function diagnose() {
+  try {
+    await fetch(base + "/api/patrol", { mode: "no-cors", cache: "no-store" });
+  } catch (_) {
+    return {
+      kind: "offline",
+      message: "Na <code>" + base + "</code> nic neběží. Spusť server: <code>gradlew bootRun</code>.",
+      detail: "Nepodařilo se navázat spojení s " + base,
+    };
+  }
+  return {
+    kind: "cors",
+    message:
+      "Server na <code>" + base + "</code> běží, ale jeho odpověď nemá hlavičku " +
+      "<code>Access-Control-Allow-Origin</code> pro origin <code>" + location.origin +
+      "</code>, takže ji prohlížeč zahodil. Doplň na serveru CORS konfiguraci.",
+    detail:
+      "Server odpověděl, ale odpověď zablokoval prohlížeč kvůli chybějícímu CORS.\n" +
+      "Origin této stránky: " + location.origin,
+  };
 }
 
 function log(method, path, status, payload) {
