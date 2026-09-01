@@ -364,7 +364,38 @@ function escapeHtml(value) {
     .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
 }
 
-load();
+/*
+ * Otevřeno dvojklikem jako file:// ?
+ *
+ * Taková stránka nemá origin - prohlížeč do hlavičky Origin pošle "null" a
+ * odmítne jakýkoli požadavek na http://localhost:8080. Není to chyba serveru
+ * a NEJDE to spravit CORS konfigurací: povolit origin "null" znamená povolit
+ * úplně komukoli, proto to server záměrně nedělá.
+ *
+ * Řešení je otevřít stránku přes http, ne jako soubor. Spring Boot ji servíruje
+ * sám, takže po `gradlew bootRun` je na http://localhost:8080.
+ */
+function refuseFileProtocol() {
+  setConnected("offline");
+  $("route").innerHTML =
+    '<li class="empty" style="text-align:left;line-height:1.75">' +
+    "<b>Tuhle stránku nelze otevřít jako soubor.</b><br><br>" +
+    "Otevřel jsi ji přes <code>file://</code>. Taková stránka nemá origin, takže jí " +
+    "prohlížeč nedovolí zavolat API — a CORS konfigurací na serveru se to spravit nedá.<br><br>" +
+    "Spusť server a otevři ji z něj:<br>" +
+    "<code>gradlew bootRun</code> &rarr; <b>http://localhost:8080</b><br><br>" +
+    "Frontend je do serveru přibalený, druhý terminál nepotřebuješ." +
+    "</li>";
+  ["next", "prev", "remove"].forEach((id) => { $(id).disabled = true; });
+  $("addForm").querySelector("button").disabled = true;
+  toast("warn", "Otevři stránku přes <code>http://localhost:8080</code>, ne jako <code>file://</code>.");
+}
+
+if (location.protocol === "file:") {
+  refuseFileProtocol();
+} else {
+  load();
+}
 </script>
 </body>
 </html>
