@@ -38,3 +38,5 @@ class CircularLinkedList<T : Any> : CircularList<T> {
 
     override fun iterator(): Iterator<T> = TODO("Walk from first to last exactly once, then stop")
 }
+
+
