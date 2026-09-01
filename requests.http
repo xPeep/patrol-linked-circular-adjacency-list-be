@@ -1,0 +1,40 @@
+### Load the whole patrol route
+GET http://localhost:8080/api/patrol
+Accept: application/json
+
+### Add a checkpoint behind the current one
+POST http://localhost:8080/api/checkpoints
+Content-Type: application/json
+
+{
+  "name": "Charging Station",
+  "description": "Check battery level",
+  "priority": "NORMAL"
+}
+
+### Move the robot forward
+POST http://localhost:8080/api/patrol/next
+Accept: application/json
+
+### Move the robot backward
+POST http://localhost:8080/api/patrol/previous
+Accept: application/json
+
+### Remove the current checkpoint
+DELETE http://localhost:8080/api/checkpoints/current
+Accept: application/json
+
+### Invalid request, must answer 400 and never 500
+POST http://localhost:8080/api/checkpoints
+Content-Type: application/json
+
+{
+  "name": "  ",
+  "description": "Check battery level",
+  "priority": "URGENT"
+}
+
+### CORS preflight from the delivered frontend
+OPTIONS http://localhost:8080/api/checkpoints
+Origin: http://localhost:5173
+Access-Control-Request-Method: POST
