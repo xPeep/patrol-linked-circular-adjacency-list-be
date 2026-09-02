@@ -11,12 +11,12 @@ class PatrolService {
 
     private val checkpoints = CircularLinkedList<Checkpoint>()
     init {
-        checkpoints.addLast(Checkpoint(name = "debil", description = "pffff", priority = Priority.LOW ))
-        checkpoints.addLast(Checkpoint(name = "debil2", description = "brrrr", priority = Priority.HIGH))
-        checkpoints.addLast(Checkpoint(name = "debil3", description =  "skrrrr", priority =  Priority.LOW))
-        checkpoints.addLast(Checkpoint(name = "debil4", description =  "skrrrr", priority =  Priority.LOW))
-        checkpoints.addLast(Checkpoint(name = "debil5", description =  "skrrrr", priority =  Priority.LOW))
-        checkpoints.addLast(Checkpoint(name = "debil6", description =  "skrrrr", priority =  Priority.LOW))
+        //checkpoints.addLast(Checkpoint(name = "debil", description = "pffff", priority = Priority.NORMAL ))
+        //checkpoints.addLast(Checkpoint(name = "debil2", description = "brrrr", priority = Priority.HIGH))
+        //checkpoints.addLast(Checkpoint(name = "debil3", description =  "skrrrr", priority =  Priority.LOW))
+        //checkpoints.addLast(Checkpoint(name = "debil4", description =  "skrrrr", priority =  Priority.NORMAL))
+        //checkpoints.addLast(Checkpoint(name = "debil5", description =  "skrrrr", priority =  Priority.HIGH))
+        //checkpoints.addLast(Checkpoint(name = "debil6", description =  "skrrrr", priority =  Priority.LOW))
     }
 
     fun state(): PatrolState =
@@ -27,8 +27,18 @@ class PatrolService {
     fun currentCheckpoint(): Checkpoint? =
         checkpoints.current()
 
-    fun addCheckpoint(name: String, description: String, priority: Priority): PatrolState =
-        TODO("Create the checkpoint, add it behind current, return the new state")
+    fun addCheckpoint(name: String, description: String, priority: Priority): PatrolState {
+        val checkpoint = Checkpoint(name = name, description = description, priority = priority)
+        checkpoints.addLast(checkpoint)
+        return state()
+    }
+
+    fun addAfterCurrent(name: String, description: String, priority: Priority): PatrolState {
+        val checkpoint = Checkpoint(name = name, description = description, priority = priority)
+        checkpoints.addAfterCurrent(checkpoint)
+        return state()
+    }
+
 
     fun moveNext(): PatrolState {
         checkpoints.next()
@@ -39,9 +49,16 @@ class PatrolService {
         checkpoints.previous()
         return state()
     }
-    fun removeCurrentCheckpoint(): PatrolState = TODO("Remove the current checkpoint or raise PatrolEmptyException")
+    fun removeCurrentCheckpoint(): PatrolState {
+        checkpoints.removeCurrent()
+        return state()
+    }
 
     fun allCheckpoints(): List<Checkpoint> {
         return checkpoints.allCheckpoints()
+    }
+
+    fun isEmpty(): Boolean {
+        return checkpoints.isEmpty()
     }
 }

@@ -8,9 +8,18 @@ class CircularLinkedList<T : Any> : CircularList<T> {
     var current: Node<T>? = null
 
     override val size: Int
-        get() = TODO("Return the number of elements currently held by the list")
+        get() {
+            if (head == null) return 0
+            var count = 1
+            var current = head!!.next
+            while (current != head) {
+                count++
+                current = current!!.next
+            }
+            return count
+        }
 
-    override fun isEmpty(): Boolean = TODO("Report whether the list holds no element at all")
+    override fun isEmpty(): Boolean = head == null
 
     override fun addLast(item: T): Unit {
         val newNode = Node(item)
@@ -29,7 +38,21 @@ class CircularLinkedList<T : Any> : CircularList<T> {
         }
     }
 
-    override fun addAfterCurrent(item: T): Unit = TODO("Insert the item directly behind current")
+    override fun addAfterCurrent(item: T): Unit {
+        val newNode = Node(item)
+        val nodeAfterCurrent = current?.next
+        if (head == null) {
+            newNode.next = newNode
+            newNode.prev = newNode
+            head = newNode
+            tail = newNode
+            current = head
+        }
+        newNode.next = nodeAfterCurrent
+        nodeAfterCurrent?.prev = newNode
+        newNode.prev = current
+        current?.next = newNode
+    }
 
     override fun current(): T = current!!.data
 
@@ -43,7 +66,17 @@ class CircularLinkedList<T : Any> : CircularList<T> {
         return current!!.data
     }
 
-    override fun removeCurrent(): T = TODO("Unlink the current element, return it, move the cursor onto its successor")
+    override fun removeCurrent(): T {
+        val nodeBeforeCurrent = current?.prev
+        val nodeAfterCurrent = current?.next
+        if (current == head) {
+            head = nodeAfterCurrent
+        }
+        nodeBeforeCurrent?.next = nodeAfterCurrent
+        nodeAfterCurrent?.prev = nodeBeforeCurrent
+        current = nodeAfterCurrent
+        return current!!.data
+    }
 
     override fun iterator(): Iterator<T> = TODO("Walk from first to last exactly once, then stop")
 
