@@ -67,15 +67,22 @@ class CircularLinkedList<T : Any> : CircularList<T> {
     }
 
     override fun removeCurrent(): T {
-        val nodeBeforeCurrent = current?.prev
-        val nodeAfterCurrent = current?.next
-        if (current == head) {
-            head = nodeAfterCurrent
+        val nodeToRemove = current ?: throw NoSuchElementException("List is empty")
+        val removedData = nodeToRemove.data
+        val nodeBeforeCurrent = nodeToRemove.prev
+        val nodeAfterCurrent = nodeToRemove.next
+        if (nodeAfterCurrent == nodeToRemove) {
+            head = null
+            tail = null
+            current = null
+        } else {
+            if (nodeToRemove == head) head = nodeAfterCurrent
+            if (nodeToRemove == tail) tail = nodeBeforeCurrent
+            nodeBeforeCurrent?.next = nodeAfterCurrent
+            nodeAfterCurrent?.prev = nodeBeforeCurrent
+            current = nodeAfterCurrent
         }
-        nodeBeforeCurrent?.next = nodeAfterCurrent
-        nodeAfterCurrent?.prev = nodeBeforeCurrent
-        current = nodeAfterCurrent
-        return current!!.data
+        return removedData
     }
 
     override fun iterator(): Iterator<T> = TODO("Walk from first to last exactly once, then stop")
