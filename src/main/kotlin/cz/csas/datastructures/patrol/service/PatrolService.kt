@@ -24,7 +24,7 @@ class PatrolService {
             )
     }
 
-    fun currentCheckpoint(): Checkpoint? =
+    fun currentCheckpoint(): Checkpoint =
         checkpoints.current()
 
     fun createCheckpoint(name: String, description: String, priority: Priority): Checkpoint {
@@ -36,18 +36,11 @@ class PatrolService {
         }
         val trimmedName = name.trim()
         val trimmedDescription = description.trim()
-        description.trim()
         val checkpoint = Checkpoint(name = trimmedName, description = trimmedDescription, priority = priority)
         return checkpoint
     }
 
     fun addCheckpoint(name: String, description: String, priority: Priority): PatrolState {
-        val checkpoint = createCheckpoint(name, description, priority)
-        checkpoints.addAfterCurrent(checkpoint)
-        return state()
-    }
-
-    fun addAfterCurrent(name: String, description: String, priority: Priority): PatrolState {
         val checkpoint = createCheckpoint(name, description, priority)
         checkpoints.addAfterCurrent(checkpoint)
         return state()

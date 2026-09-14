@@ -3,7 +3,6 @@ package cz.csas.datastructures.patrol.controller
 import cz.csas.datastructures.patrol.dto.CheckpointCreateRequest
 import cz.csas.datastructures.patrol.model.PatrolState
 import cz.csas.datastructures.patrol.service.InputEmptyException
-import cz.csas.datastructures.patrol.service.PatrolEmptyException
 import cz.csas.datastructures.patrol.service.PatrolService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -48,25 +47,16 @@ class PatrolController(
 
     @PostMapping("/api/patrol/next")
     fun nextPatrol(): PatrolState {
-        if (patrolService.isEmpty()) {
-            throw PatrolEmptyException("Cannot move to next checkpoint because patrol route is empty")
-        }
         return patrolService.moveNext()
     }
 
     @PostMapping("/api/patrol/previous")
     fun previousPatrol(): PatrolState {
-        if (patrolService.isEmpty()) {
-            throw PatrolEmptyException("Cannot move to previous checkpoint because patrol route is empty")
-        }
        return patrolService.movePrevious()
     }
 
     @DeleteMapping("/api/checkpoints/current")
     fun removeCurrentPatrol(): PatrolState {
-         if (patrolService.isEmpty()) {
-            throw PatrolEmptyException("Cannot remove current checkpoint because patrol route is empty")
-        }
         return patrolService.removeCurrentCheckpoint()
     }
 }

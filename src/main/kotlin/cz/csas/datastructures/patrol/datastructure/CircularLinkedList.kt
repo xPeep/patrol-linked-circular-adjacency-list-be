@@ -2,29 +2,16 @@ package cz.csas.datastructures.patrol.datastructure
 
 class CircularLinkedList<T : Any> : CircularList<T> {
 
+    var head: Node<T>? = null
+    var tail: Node<T>? = null
+    var current: Node<T>? = null
+    var modCount: Int = 0
+
     data class Node<T>(
         var data: T,
         var next: Node<T>? = null,
         var prev: Node<T>? = null
     )
-
-    inner class CheckpointList(private val count: Int) : AbstractList<T>() {
-        override val size: Int
-            get() = count
-
-        override fun get(index: Int): T {
-            var node = head
-            repeat(index) {
-                node = node?.next
-            }
-            return node!!.data
-        }
-    }
-
-    var head: Node<T>? = null
-    var tail: Node<T>? = null
-    var current: Node<T>? = null
-    var modCount: Int = 0
 
     override val size: Int
         get() {
@@ -40,7 +27,7 @@ class CircularLinkedList<T : Any> : CircularList<T> {
 
     override fun isEmpty(): Boolean = head == null
 
-    override fun addLast(item: T): Unit {
+    override fun addLast(item: T){
         val newNode = Node(item)
         if (head == null) {
             newNode.next = newNode
@@ -58,7 +45,7 @@ class CircularLinkedList<T : Any> : CircularList<T> {
         modCount++
     }
 
-    override fun addAfterCurrent(item: T): Unit {
+    override fun addAfterCurrent(item: T) {
         val newNode = Node(item)
         val nodeAfterCurrent = current?.next
         if (head == null) {
@@ -67,21 +54,20 @@ class CircularLinkedList<T : Any> : CircularList<T> {
             head = newNode
             tail = newNode
             current = head
+        } else {
+            newNode.next = nodeAfterCurrent
+            nodeAfterCurrent?.prev = newNode
+            newNode.prev = current
+            current?.next = newNode
         }
         if (current === tail) {
             tail = newNode
         }
-        newNode.next = nodeAfterCurrent
-        nodeAfterCurrent?.prev = newNode
-        newNode.prev = current
-        current?.next = newNode
         modCount++
     }
 
     override fun current(): T {
-        if (current == null) {
-            throw NoSuchElementException("")
-        }
+        current ?: throw NoSuchElementException()
         return current!!.data
     }
 
@@ -112,8 +98,8 @@ class CircularLinkedList<T : Any> : CircularList<T> {
             nodeBeforeCurrent?.next = nodeAfterCurrent
             nodeAfterCurrent?.prev = nodeBeforeCurrent
             current = nodeAfterCurrent
-            modCount++
         }
+        modCount++
         return removedData
     }
 
@@ -138,5 +124,18 @@ class CircularLinkedList<T : Any> : CircularList<T> {
     override fun allCheckpoints(): CheckpointList {
         val result = CheckpointList(size)
         return result
+    }
+
+    inner class CheckpointList(private val count: Int) : AbstractList<T>() {
+        override val size: Int
+            get() = count
+
+        override fun get(index: Int): T {
+            var node = head
+            repeat(index) {
+                node = node?.next
+            }
+            return node!!.data
+        }
     }
 }
