@@ -17,11 +17,11 @@ class ApiExceptionHandler {
             ApiErrorResponse(
                 400,
                 "BAD_REQUEST",
-                message = e.message ?: e.localizedMessage))
+                message = "Checkpoint priority must be one of LOW, NORMAL, HIGH"))
     }
 
     @ExceptionHandler(PatrolEmptyException::class)
-    fun handleEmptyException(e: PatrolEmptyException): ResponseEntity<ApiErrorResponse> {
+    fun handleEmptyPatrolException(e: PatrolEmptyException): ResponseEntity<ApiErrorResponse> {
         return ResponseEntity.status(409).body(
             ApiErrorResponse(
                 status = 409,
@@ -31,7 +31,7 @@ class ApiExceptionHandler {
         )
     }
     @ExceptionHandler(InputEmptyException::class)
-    fun handleEmptyException(e: InputEmptyException): ResponseEntity<ApiErrorResponse> {
+    fun handleEmptyInputException(e: InputEmptyException): ResponseEntity<ApiErrorResponse> {
         return ResponseEntity.status(400).body(
             ApiErrorResponse(
                 status = 400,

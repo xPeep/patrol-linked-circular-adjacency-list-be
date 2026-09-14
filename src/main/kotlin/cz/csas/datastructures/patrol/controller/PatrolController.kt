@@ -1,8 +1,9 @@
 package cz.csas.datastructures.patrol.controller
 
 import cz.csas.datastructures.patrol.dto.CheckpointCreateRequest
-import cz.csas.datastructures.patrol.dto.ApiErrorResponse
 import cz.csas.datastructures.patrol.model.PatrolState
+import cz.csas.datastructures.patrol.service.InputEmptyException
+import cz.csas.datastructures.patrol.service.PatrolEmptyException
 import cz.csas.datastructures.patrol.service.PatrolService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -31,36 +32,41 @@ class PatrolController(
     fun addCheckpoint(
         @RequestBody requestBody: CheckpointCreateRequest
     ): ResponseEntity<Any> =
-        ResponseEntity.status(201).body(
-            patrolService.addAfterCurrent(
-                requestBody.name,
-                requestBody.description,
-                requestBody.priority
+        if (requestBody.name.isNullOrBlank()) {
+            throw InputEmptyException("Checkpoint name must not be blank")
+        } else if (requestBody.description.isBlank()) {
+            throw InputEmptyException("Checkpoint description must not be blank")
+        } else {
+            ResponseEntity.status(201).body(
+                patrolService.addCheckpoint(
+                    requestBody.name,
+                    requestBody.description,
+                    requestBody.priority
+                )
             )
-        )
+        }
 
     @PostMapping("/api/patrol/next")
     fun nextPatrol(): PatrolState {
+        if (patrolService.isEmpty()) {
+            throw PatrolEmptyException("Cannot move to next checkpoint because patrol route is empty")
+        }
         return patrolService.moveNext()
     }
 
     @PostMapping("/api/patrol/previous")
     fun previousPatrol(): PatrolState {
+        if (patrolService.isEmpty()) {
+            throw PatrolEmptyException("Cannot move to previous checkpoint because patrol route is empty")
+        }
        return patrolService.movePrevious()
     }
 
     @DeleteMapping("/api/checkpoints/current")
-    fun removeCurrentPatrol(): ResponseEntity<Any> {
-        return if (patrolService.isEmpty()) {
-            ResponseEntity.status(409).body(
-                ApiErrorResponse(
-                    409,
-                    "PATROL_EMPTY",
-                    message = "Cannot remove current checkpoint because patrol route is empty"))
-        } else {
-            ResponseEntity.status(200).body(
-                patrolService.removeCurrentCheckpoint()
-            )
+    fun removeCurrentPatrol(): PatrolState {
+         if (patrolService.isEmpty()) {
+            throw PatrolEmptyException("Cannot remove current checkpoint because patrol route is empty")
         }
+        return patrolService.removeCurrentCheckpoint()
     }
 }

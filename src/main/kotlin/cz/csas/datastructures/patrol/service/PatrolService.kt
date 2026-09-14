@@ -43,7 +43,7 @@ class PatrolService {
 
     fun addCheckpoint(name: String, description: String, priority: Priority): PatrolState {
         val checkpoint = createCheckpoint(name, description, priority)
-        checkpoints.addLast(checkpoint)
+        checkpoints.addAfterCurrent(checkpoint)
         return state()
     }
 

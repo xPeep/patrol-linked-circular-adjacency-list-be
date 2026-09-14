@@ -1,18 +1,37 @@
 package cz.csas.datastructures.patrol.datastructure
 
-import cz.csas.datastructures.patrol.model.Node
-
 class CircularLinkedList<T : Any> : CircularList<T> {
+
+    data class Node<T>(
+        var data: T,
+        var next: Node<T>? = null,
+        var prev: Node<T>? = null
+    )
+
+    inner class CheckpointList(private val count: Int) : AbstractList<T>() {
+        override val size: Int
+            get() = count
+
+        override fun get(index: Int): T {
+            var node = head
+            repeat(index) {
+                node = node?.next
+            }
+            return node!!.data
+        }
+    }
+
     var head: Node<T>? = null
     var tail: Node<T>? = null
     var current: Node<T>? = null
+    var modCount: Int = 0
 
     override val size: Int
         get() {
             if (head == null) return 0
             var count = 1
             var current = head!!.next
-            while (current != head) {
+            while (current !== head) {
                 count++
                 current = current!!.next
             }
@@ -36,6 +55,7 @@ class CircularLinkedList<T : Any> : CircularList<T> {
             newNode.prev = tail
             tail = newNode
         }
+        modCount++
     }
 
     override fun addAfterCurrent(item: T): Unit {
@@ -48,21 +68,32 @@ class CircularLinkedList<T : Any> : CircularList<T> {
             tail = newNode
             current = head
         }
+        if (current === tail) {
+            tail = newNode
+        }
         newNode.next = nodeAfterCurrent
         nodeAfterCurrent?.prev = newNode
         newNode.prev = current
         current?.next = newNode
+        modCount++
     }
 
-    override fun current(): T = current!!.data
+    override fun current(): T {
+        if (current == null) {
+            throw NoSuchElementException("")
+        }
+        return current!!.data
+    }
 
     override fun next(): T {
-        current = current?.next
+        val node = current ?: throw NoSuchElementException("Cannot move to next checkpoint because patrol route is empty")
+        current = node.next
         return current!!.data
     }
 
     override fun previous(): T {
-        current = current?.prev
+        val node = current ?: throw NoSuchElementException("Cannot move to previous checkpoint because patrol route is empty")
+        current = node.prev
         return current!!.data
     }
 
@@ -71,30 +102,41 @@ class CircularLinkedList<T : Any> : CircularList<T> {
         val removedData = nodeToRemove.data
         val nodeBeforeCurrent = nodeToRemove.prev
         val nodeAfterCurrent = nodeToRemove.next
-        if (nodeAfterCurrent == nodeToRemove) {
+        if (nodeAfterCurrent === nodeToRemove) {
             head = null
             tail = null
             current = null
         } else {
-            if (nodeToRemove == head) head = nodeAfterCurrent
-            if (nodeToRemove == tail) tail = nodeBeforeCurrent
+            if (nodeToRemove === head) head = nodeAfterCurrent
+            if (nodeToRemove === tail) tail = nodeBeforeCurrent
             nodeBeforeCurrent?.next = nodeAfterCurrent
             nodeAfterCurrent?.prev = nodeBeforeCurrent
             current = nodeAfterCurrent
+            modCount++
         }
         return removedData
     }
 
-    override fun iterator(): Iterator<T> = TODO("Walk from first to last exactly once, then stop")
+    override fun iterator(): Iterator<T> {
+        var nextNode = head
+        var index = 0
+        val expectedModCount = modCount
+        return object : Iterator<T> {
+            override fun hasNext(): Boolean = index < size
+            override fun next(): T {
+                if (hasNext()) {
+                    val value = nextNode!!.data
+                    nextNode = nextNode?.next
+                    index++
+                    if (modCount != expectedModCount) throw ConcurrentModificationException()
+                    return value
+                } else throw NoSuchElementException()
+            }
+        }
+    }
 
-    override fun allCheckpoints(): List<T> {
-        val start = head ?: return emptyList()
-        val result = mutableListOf<T>()
-        var node = start
-        do {
-            result.add(node.data)
-            node = node.next!!
-        } while (node != start)
+    override fun allCheckpoints(): CheckpointList {
+        val result = CheckpointList(size)
         return result
     }
 }
