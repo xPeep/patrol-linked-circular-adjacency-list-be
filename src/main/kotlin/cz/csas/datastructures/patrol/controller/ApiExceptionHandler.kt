@@ -15,8 +15,8 @@ class ApiExceptionHandler {
     fun handleNotReadableException(e: HttpMessageNotReadableException): ResponseEntity<ApiErrorResponse> {
         return ResponseEntity.status(400).body(
             ApiErrorResponse(
-                400,
-                "BAD_REQUEST",
+                status = 400,
+                error = "BAD_REQUEST",
                 message = "Checkpoint priority must be one of LOW, NORMAL, HIGH"))
     }
 
@@ -30,6 +30,7 @@ class ApiExceptionHandler {
             )
         )
     }
+
     @ExceptionHandler(InputEmptyException::class)
     fun handleEmptyInputException(e: InputEmptyException): ResponseEntity<ApiErrorResponse> {
         return ResponseEntity.status(400).body(

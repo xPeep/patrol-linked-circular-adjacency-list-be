@@ -11,35 +11,6 @@ class PatrolService {
 
     private val checkpoints = CircularLinkedList<Checkpoint>()
 
-    fun state(): PatrolState {
-        return if (checkpoints.isEmpty()) {
-            PatrolState(
-                current = null,
-                checkpoints = emptyList()
-            )
-        } else
-            PatrolState(
-                current = currentCheckpoint(),
-                checkpoints = allCheckpoints()
-            )
-    }
-
-    fun currentCheckpoint(): Checkpoint =
-        checkpoints.current()
-
-    fun createCheckpoint(name: String, description: String, priority: Priority): Checkpoint {
-        if (name.isBlank()) {
-            throw InputEmptyException("Checkpoint name must not be blank")
-        }
-        if (description.isBlank()) {
-            throw InputEmptyException("Checkpoint description must not be blank")
-        }
-        val trimmedName = name.trim()
-        val trimmedDescription = description.trim()
-        val checkpoint = Checkpoint(name = trimmedName, description = trimmedDescription, priority = priority)
-        return checkpoint
-    }
-
     fun addCheckpoint(name: String, description: String, priority: Priority): PatrolState {
         val checkpoint = createCheckpoint(name, description, priority)
         checkpoints.addAfterCurrent(checkpoint)
@@ -68,6 +39,35 @@ class PatrolService {
         }
         checkpoints.removeCurrent()
         return state()
+    }
+
+    fun state(): PatrolState {
+        return if (checkpoints.isEmpty()) {
+            PatrolState(
+                current = null,
+                checkpoints = emptyList()
+            )
+        } else
+            PatrolState(
+                current = currentCheckpoint(),
+                checkpoints = allCheckpoints()
+            )
+    }
+
+    fun currentCheckpoint(): Checkpoint =
+        checkpoints.current()
+
+    private fun createCheckpoint(name: String, description: String, priority: Priority): Checkpoint {
+        if (name.isBlank()) {
+            throw InputEmptyException("Checkpoint name must not be blank")
+        }
+        if (description.isBlank()) {
+            throw InputEmptyException("Checkpoint description must not be blank")
+        }
+        val trimmedName = name.trim()
+        val trimmedDescription = description.trim()
+        val checkpoint = Checkpoint(name = trimmedName, description = trimmedDescription, priority = priority)
+        return checkpoint
     }
 
     fun allCheckpoints(): List<Checkpoint> {

@@ -17,15 +17,7 @@ class PatrolController(
     private val patrolService: PatrolService,
 ) {
     @GetMapping("/api/patrol")
-    fun apiPatrol(): PatrolState =
-        if (patrolService.isEmpty()) {
-            PatrolState(
-                current = null,
-                checkpoints = emptyList()
-            )
-        } else {
-            patrolService.state()
-        }
+    fun apiPatrol(): PatrolState = patrolService.state()
 
     @PostMapping("/api/checkpoints")
     fun addCheckpoint(
