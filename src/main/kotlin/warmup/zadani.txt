@@ -1,0 +1,83 @@
+Kotlin rozcvička: schránka na jednu hodnotu (15–20 minut)
+
+Otevři Warmup.kt. Vše piš do něj a spouštěj zelenou šipkou vedle main()
+v IntelliJ IDEA. Není potřeba spouštět Spring ani testy projektu.
+Postupuj po jednotlivých krocích, po každém si program spusť.
+
+1. Proměnné a funkce (3 minuty)
+
+V main vytvoř neměnný název skladu a měnitelný počet návštěv.
+Počet návštěv zvyš o jedna. Vypiš obě hodnoty v jedné větě pomocí
+řetězcové šablony (znak $ uvnitř řetězce).
+
+Mimo main napiš funkci popis, která dostane název (String) a počet
+(Int) a vrátí String. Pro počet 0 vrátí „Sklad X zatím nikdo nenavštívil“,
+jinak „Sklad X: N návštěv“. X a N nahraď skutečnými hodnotami.
+Z main zavolej obě větve a vypiš výsledky.
+
+2. Třída a null (5 minut)
+
+Vytvoř běžnou třídu Schranka s vlastností obsah typu String?,
+která je na začátku null. Přidej:
+
+  vloz(text: String) — uloží text; předchozí obsah případně přepíše.
+  nahled(): String — vrátí obsah, nebo „prázdno“, když je obsah null.
+  vyzvedni(): String — vrátí obsah a vyprázdní schránku.
+                      Pokud je prázdná, vyhodí NoSuchElementException.
+
+Zatím nepoužívej !!. Při vyzvedávání si rozmysli pořadí kroků:
+kterou hodnotu musíš uchovat, než změníš stav objektu?
+
+Ručně ověř tuto posloupnost:
+  nová schránka → nahled() vrací „prázdno“
+  vloz("klíč") → nahled() vrací „klíč“
+  vyzvedni() vrací „klíč“ → další nahled() vrací „prázdno“
+  další vyzvedni() vyhodí NoSuchElementException
+
+Poslední pokus nech na konec programu, protože výjimka program ukončí.
+
+3. Generika a getter (5 minut)
+
+Uprav svou třídu na Schranka<T : Any>. T je typ uložené hodnoty.
+Uvnitř drž T?, protože prázdná schránka nemá žádnou hodnotu.
+vloz nyní přijímá T, vyzvedni vrací T.
+nahled změň na návratový typ T? a při prázdné schránce vracej null.
+Text „prázdno“ případně zvol až při výpisu v main.
+
+Přidej vlastnost jePrazdna: Boolean s vlastním getterem, který odpověď
+odvodí z obsahu. Neukládej si další Boolean, který bys musel aktualizovat.
+
+V main vyzkoušej samostatně Schranka<String> a Schranka<Int>.
+Ověř jePrazdna před vložením, po vložení a po vyzvednutí.
+Vysvětli vlastními slovy rozdíl mezi omezením „T : Any“ a typem „T?“.
+
+4. Bonus: reference (3 minuty)
+
+Vytvoř jednu schránku a ulož ji do val a. Potom napiš val b = a.
+Přes b vlož hodnotu. Než spustíš program, odhadni, co uvidíš přes a.
+Nakonec vytvoř další samostatnou schránku c se stejným obsahem.
+Porovnej a === b a a === c. Proč se výsledky liší?
+Proč můžeš měnit obsah schránky, přestože je a deklarované pomocí val?
+
+Malý tahák, když se zasekneš
+
+  val             referenci/hodnotu proměnné už nepřiřadíš znovu
+  var             proměnné můžeš přiřadit jinou hodnotu
+  fun             deklarace funkce; návratový typ píšeš za dvojtečku
+  String?         String nebo null
+  ?.              přístup pouze tehdy, když hodnota není null
+  ?:              náhradní hodnota, pokud je levá strana null
+  throw           vyhození výjimky
+  get()           vlastní výpočet hodnoty vlastnosti při jejím čtení
+  <T : Any>       parametr typu, který sám nesmí být nullable
+  ===             jsou to reference na tentýž objekt?
+
+Přechod k projektu
+
+Až to zvládneš, přečti KDoc rozhraní CircularList a otevři CircularLinkedList.
+Najdi tam generický parametr, override, getter a návratové typy metod.
+Zkus vlastními slovy říct, proč reference na uzel může být null,
+i když uložený prvek typu T null být nesmí.
+
+Pošli mi „zkontroluj warmup“; přečtu tvůj aktuální soubor a probereme
+první místo, kde je potřeba něco upravit.
